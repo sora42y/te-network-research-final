@@ -1,0 +1,45 @@
+N_CAP = 50
+
+[1] Loading data...
+  Returns: (1352, 236) | Universe capped at N<=50
+
+==================================================
+[T=60, N<=50]
+  Obs: 11,293 | Connected: 49.6%
+  Density: 0.0308
+  Portfolio sort L/S: Ann=3.65%  t=0.58
+  Binary split C-I:   Ann=-1.36%  t=-1.01
+
+==================================================
+[T=120, N<=50]
+  Obs: 11,382 | Connected: 21.6%
+  Density: 0.0036
+  Portfolio sort L/S: Ann=nan%  t=n/a
+  Binary split C-I:   Ann=-1.58%  t=-1.06
+
+==================================================
+[T=180, N<=50]
+  Obs: 10,832 | Connected: 16.8%
+  Density: 0.0023
+  Portfolio sort L/S: Ann=nan%  t=n/a
+  Binary split C-I:   Ann=-0.82%  t=-0.55
+
+==================================================
+[T=252, N<=50]
+  Obs: 10,081 | Connected: 16.1%
+  Density: 0.0027
+  Portfolio sort L/S: Ann=nan%  t=n/a
+  Binary split C-I:   Ann=-0.51%  t=-0.33
+
+============================================================
+SUMMARY (N<=50)
+============================================================
+     T   Conn%   Density    PS t    BS t    BS Ann
+--------------------------------------------------
+    60   49.6%    0.0308    0.58   -1.01    -1.36%
+   120   21.6%    0.0036     n/a   -1.06    -1.58%
+   180   16.8%    0.0023     n/a   -0.55    -0.82%
+   252   16.1%    0.0027     n/a   -0.33    -0.51%
+
+Saved: C:\Users\soray\.openclaw\workspace\te_network_research\results\sweep_N50_figure.png
+Done.

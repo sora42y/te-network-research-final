@@ -1,0 +1,45 @@
+N_CAP = 90
+
+[1] Loading data...
+  Returns: (1352, 236) | Universe capped at N<=90
+
+==================================================
+[T=60, N<=90]
+  Obs: 19,690 | Connected: 27.0%
+  Density: 0.0022
+  Portfolio sort L/S: Ann=nan%  t=n/a
+  Binary split C-I:   Ann=-1.24%  t=-1.25
+
+==================================================
+[T=120, N<=90]
+  Obs: 19,859 | Connected: 27.7%
+  Density: 0.0049
+  Portfolio sort L/S: Ann=-0.17%  t=-0.02
+  Binary split C-I:   Ann=-1.37%  t=-1.63
+
+==================================================
+[T=180, N<=90]
+  Obs: 19,230 | Connected: 24.7%
+  Density: 0.0046
+  Portfolio sort L/S: Ann=16.61%  t=1.09
+  Binary split C-I:   Ann=-0.17%  t=-0.18
+
+==================================================
+[T=252, N<=90]
+  Obs: 18,149 | Connected: 22.5%
+  Density: 0.0035
+  Portfolio sort L/S: Ann=9.70%  t=0.39
+  Binary split C-I:   Ann=-0.87%  t=-0.75
+
+============================================================
+SUMMARY (N<=90)
+============================================================
+     T   Conn%   Density    PS t    BS t    BS Ann
+--------------------------------------------------
+    60   27.0%    0.0022     n/a   -1.25    -1.24%
+   120   27.7%    0.0049   -0.02   -1.63    -1.37%
+   180   24.7%    0.0046    1.09   -0.18    -0.17%
+   252   22.5%    0.0035    0.39   -0.75    -0.87%
+
+Saved: C:\Users\soray\.openclaw\workspace\te_network_research\results\sweep_N90_figure.png
+Done.
