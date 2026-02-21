@@ -186,87 +186,30 @@ financial network estimation. We then apply the resulting diagnostic framework t
 concrete downstream task: using Net Information Outflow (NIO) from TE networks
 to predict cross-sectional equity returns.
 
-\subsection{What We Do}
+\subsection{Overview and Contribution}
 
-We pursue three lines of investigation.
+We run a matched-$(N,T)$ simulation audit of TE/GC network estimation across
+$T/N$ ratios from 0.6 to 16.7, using three DGPs: Gaussian (baseline),
+GARCH(1,1), and GARCH+Factor (realistic). At $T/N < 5$—the regime of all
+seven papers in Table~\ref{tab:literature}—OLS precision is 7--17\% (83--93\%
+false positives). LASSO achieves higher precision but near-zero recall,
+collapsing to density $<1\%$ on S\&P 500 data. Hub detection performs close
+to random.
 
-\textbf{First}, we conduct a Monte Carlo study comparing OLS pairwise TE and
-LASSO-regularized TE on sparse VAR data with known ground truth across $T/N$
-ratios from 0.6 to 16.7, evaluating network recovery via F1 score, precision,
-and recall. We assess three DGPs of increasing realism: i.i.d.\ Gaussian
-innovations (the most favourable case), GARCH(1,1) with $t_5$ errors, and
-a common factor structure with GARCH idiosyncratic dynamics calibrated to
-financial returns. This design directly addresses the concern that simulation
-results merely restate known OLS breakdown results: our contribution is to
-quantify \emph{network-level} recovery failure --- hub detection accuracy,
-edge set precision --- at the exact $(N, T)$ pairs used in the seven papers
-of Table~\ref{tab:literature}.
+We also embed a known 10\% annualized network premium in simulated data and
+check if estimation recovers it. Oracle $t=5.74$ (significant); estimated
+$t \approx 0.7$ at $T/N=5$ (noise). Even with 30\% premia, signals barely
+emerge at $T/N=10$. This power test shows estimation noise alone destroys
+plausible network-return channels.
 
-\textbf{Second}, we apply both estimators to daily returns on S\&P~500
-constituents (2019--2025), using factor-neutral residuals as our baseline
-specification throughout. Factor-neutral preprocessing --- projecting returns
-onto the Fama-French five factors plus momentum within each rolling window
-and using the residuals as TE input --- is applied \emph{before} estimation
-to remove common factor contamination at the signal construction stage, not
-as an ex-post control. Raw TE is reported as a robustness contrast.
-
-\textbf{Third}, we conduct a comprehensive sweep over estimation window sizes
-($T = 60$--$252$) and universe sizes ($N = 30$--$100$), mapping the $t$-statistic
-of the NIO cross-sectional signal as a function of $T/N$ to empirically identify
-the estimation quality threshold below which no signal can emerge.
-
-\subsection{What We Find}
-
-At $T/N < 5$ --- the regime of all seven papers in Table~\ref{tab:literature}
---- OLS-TE precision is 7--17\% across all three DGPs (100-trial Monte Carlo),
-meaning 83--93\% of detected edges are false positives. LASSO achieves higher precision but
-near-zero recall, producing near-empty networks on real data (density $< 1\%$
-vs.\ OLS's mechanical 25\%). Importantly, while Gaussian innovations show
-improving recovery at higher $T/N$, the GARCH+Factor DGP does not: OLS
-precision remains stuck at 11--19\% even at $T/N = 16.7$, showing that
-estimation failure is not merely a small-sample artefact but persists under
-realistic financial dynamics. No combination of estimation windows, universe
-sizes, or preprocessing recovers a robust NIO cross-sectional signal.
-Factor-neutral TE reveals that much of the raw TE variation reflects common
-factor co-movement rather than genuine directed information flow --- an
-additional noise source beyond $T/N$ that affects all seven papers in
-Table~\ref{tab:literature}.
-
-\subsection{Contribution}
-
-\begin{enumerate}
-  \item \textbf{Filling the matched-$(N,T)$ simulation validation gap.} We provide the first
-    simulation study that evaluates \emph{network-level} recovery quality ---
-    hub detection, edge set accuracy --- not just individual pairwise test
-    properties, for TE/GC financial networks across $T/N$ ratios spanning the
-    range used in published work. This bridges the high-dimensional VAR
-    literature, where the curse of dimensionality is well understood
-    \citep{adamek2023, hecq2023}, and the applied financial network literature,
-    where it has been systematically ignored.
-
-  \item \textbf{Establishing the $T/N$ barrier for financial network signals.}
-    We show that reliable edge-level estimation requires $T/N \approx 8$--$10$,
-    far above the $T/N = 0.3$--$4$ used in the seven papers of
-    Table~\ref{tab:literature}. At $T/N$ ratios typical of financial
-    applications ($N = 100$, $T = 60$), network topology is not recoverable ---
-    and downstream signals constructed from it (NIO, centrality, hub rankings)
-    are dominated by estimation noise.
-
-  \item \textbf{Power analysis: signal degradation under estimation noise.}
-    We embed a known 10\% annualized network premium in simulated data and
-    measure how estimation noise degrades the signal (Section~\ref{sec:oracle_nio}).
-    Oracle $t=5.74$ (significant); estimated $t \approx 0.7$ at $T/N=5$ (noise).
-    Even with 30\% annualized premia, signals barely emerge at $T/N=10$.
-    This sets a lower bound on required $T/N$ for detectability: estimation
-    noise alone destroys plausible network-return channels at typical sample sizes.
-\end{enumerate}
-
-\subsection{Roadmap}
-
-Section~\ref{sec:method} describes methodology. Section~\ref{sec:simulation}
-presents the matched-$(N,T)$ simulation. Section~\ref{sec:empirical} presents
-empirical results. Section~\ref{sec:discussion} discusses implications
-and methodological guidance. Section~\ref{sec:conclusion} concludes.
+Three contributions. First, we bridge the high-dimensional VAR literature
+\citep{adamek2023, hecq2023} and the applied network literature by quantifying
+\emph{network-level} recovery failure—hub detection, edge sets—at the exact
+$(N,T)$ pairs used in published work. Second, we establish the $T/N$ barrier:
+reliable edge-level estimation requires $T/N \approx 8$--10, far above
+$T/N < 5$ used in most studies. Third, the power test sets a lower bound on
+required $T/N$ for detectability, independent of whether network-return
+mechanisms exist in real markets.
 
 % ============================================================
 % 2. Related Literature
