@@ -220,7 +220,7 @@ mechanisms exist in real markets.
 \citet{billio2012} establish the pairwise GC network as a systemic risk
 measure. \citet{dieboldYilmaz2014} develop a connectedness framework based
 on forecast error variance decompositions. \citet{demirer2018} extend this
-to high dimensions with LASSO. \citet{hue2019} demonstrate that pairwise GC
+to high dimensions with LASSO. \citet{hue2019} show that pairwise GC
 produces persistent spurious causalities and propose a leave-one-out
 correction; their Monte Carlo, however, evaluates the individual test
 statistic, not network topology recovery.
@@ -824,81 +824,27 @@ approaches this threshold.
 
 \subsection{Aggregate Connectedness Recovery}
 \label{sec:aggregate_recovery}
+\subsection{Aggregate Connectedness Recovery}
 
-A central claim in \citet{billio2012} and related work is that
-\emph{aggregate} network connectedness tracks systemic risk over time.
-Our node-level findings do not necessarily refute this: an estimator
-may misidentify individual edges while still detecting the overall
-connectivity level. We test this directly.
+A central claim in \citet{billio2012} is that \emph{aggregate} network
+connectedness tracks systemic risk. We test this: simulate $N=50$, $T=500$
+with regime switch at $t=250$ (density 3\% → 12\%). OLS-TE detects the
+increase in 100\% of trials (100 Monte Carlo); LASSO-TE in 89\%. Both
+underestimate the \emph{level}: OLS reports 5.1--7.3\% vs.\ true 3--12\%;
+LASSO compresses to 0.17--0.39\%. Rolling window robustness: OLS-TE density
+correlates $r=0.46$ with truth; LASSO $r=0.09$ (near-empty network).
 
-\paragraph{Design A: Two-regime clean split.}
-We simulate $N=50$, $T=500$ with an abrupt regime switch at $t=250$:
-regime~1 has true density 3\% (coefficient scale 0.08); regime~2 has
-density 12\% (scale 0.12). Across 100 Monte Carlo trials we ask:
-does $\hat{d}_2 > \hat{d}_1$?
-
-\begin{table}[H]
-  \centering
-  \caption{Aggregate Density Recovery: Two-Regime Design ($N=50$, $T=500$)}
-  \label{tab:aggregate_recovery}
-  \small
-  \begin{tabular}{lcccc}
-    \toprule
-    & $\hat{d}_1$ & $\hat{d}_2$ & $\hat{d}_2 - \hat{d}_1$ & Detection Rate \\
-    \midrule
-    True          & 3.0\% & 12.0\% & 9.0\% & --- \\
-    OLS-TE        & 5.1\% & 7.3\% & 2.2\% & 1.000 \\
-    LASSO-TE      & 0.17\% & 0.39\% & 0.22\% & 0.890 \\
-    \bottomrule
-  \end{tabular}
-  \medskip\\
-  \small\textit{Note:} Detection rate = Pr[$\hat{d}_2 > \hat{d}_1$] across 100 trials.
-\end{table}
-
-OLS-TE detects the crisis-period connectivity increase in 100\% of trials;
-LASSO-TE detects it in 89\%. However, both estimators severely
-underestimate the \emph{level}: OLS reports densities of 5.1\%--7.3\% against true 3\%--12\%, and LASSO
-is more compressed still. The direction is recoverable; the magnitude is not.
-
-\paragraph{Design B: Rolling window (robustness).}
-With $T=1000$ and a crisis window at $t=400$--$600$ (density rising from 3\%
-to 12\%), rolling OLS-TE density achieves correlation $r=0.46$
-with the true density time series; LASSO-TE achieves $r=0.09$.
-The attenuation in LASSO reflects its near-empty network: when nearly all
-edges are zero, aggregate density has little room to move.
-
-These results support a refined conclusion: \emph{aggregate} connectedness
-trends (the directional claim of \citealt{billio2012}) are partially
-recoverable by OLS-TE, but \emph{node-level} hub identity and edge topology
-are not. The two claims must be evaluated separately.
-
-\subsection{What Aggregate Measures Survive?}
-
-The precision failures documented above are specific to \emph{node-level}
-claims: hub identification, centrality rankings, and directed edge existence.
-Aggregate network statistics may be more robust, because they are functions
-of the full edge matrix rather than individual entries.
-
-Mean network density, average TE strength, and system-wide connectedness
-measures (e.g., the variance decomposition index of \citealt{dieboldYilmaz2014})
-aggregate over many estimated edges and thus benefit from averaging out
-individual estimation errors. These measures may validly detect
-\emph{aggregate} increases in network connectivity during stress episodes
---- the 2008 crisis, COVID-19 --- even when individual hub identities are
-unreliable. Researchers should distinguish clearly between aggregate
-connectedness claims (more defensible) and node-level claims (requiring
-validation at the paper's actual $T/N$).
+Conclusion: aggregate connectedness \emph{trends} are partially recoverable,
+but node-level hub identities are not. Aggregate measures (mean density,
+Diebold-Yilmaz index) benefit from error cancellation and may validly detect
+stress-period connectivity increases even when individual edges fail.
 
 \subsection{Hub Sector Identification: Billio-Style Test}
 \label{sec:hub_billio}
 
-\citet{billio2012} identify specific financial sectors (banks, insurers)
-as dominant shock transmitters. We test whether TE estimators can
-recover a designated hub sector when ground truth is known.
-
-We assign 5 hub nodes out-edge density of 30\% (hub$\to$rest), versus
-5\% background density among non-hub nodes, with $N=50$, $T=500$.
-Table~\ref{tab:hub_billio} reports hub detection accuracy.
+\citet{billio2012} identify banks/insurers as dominant transmitters.
+We test whether TE recovers a designated hub sector: assign 5 hub nodes
+out-edge density 30\% (hub→rest) vs.\ 5\% background ($N=50$, $T=500$).
 
 \begin{table}[H]
   \centering
@@ -915,31 +861,20 @@ Table~\ref{tab:hub_billio} reports hub detection accuracy.
     Random baseline & 0.500 & 0.000 & --- & 5\% \\
     \bottomrule
   \end{tabular}
-  \medskip\\
-  \small\textit{Note:} Hub$>$median = fraction of hub nodes ranking above
-  median non-hub in estimated TE out-flow. Hub NIO $t$-stat tests
-  hub vs non-hub mean NIO.
 \end{table}
 
-OLS-TE identifies hub nodes above the median in 99.8\% of cases and
-produces a hub NIO $t$-statistic of 7.4 (significant in 100\% of trials). 
-LASSO-TE, despite its higher edge precision, identifies hub nodes
-in only 21.2\% of cases (below random baseline of 50\%), because
-its near-empty networks contain too few edges to produce reliable
-out-degree rankings.
-
-This result reveals a fundamental trade-off: OLS-TE, despite low edge
-precision at the node level, preserves sufficient aggregate signal
-to identify dominant transmitter \emph{sectors}. LASSO-TE achieves
-higher per-edge precision but suppresses so many edges that sector-level
-inference also fails. Neither estimator reliably recovers the full
-edge topology at financially relevant $T/N$ ratios.
+OLS-TE identifies hub nodes above median in 99.8\% of cases ($t=7.4$, 100\%
+significant). LASSO-TE: 21.2\% (below random). Trade-off: OLS preserves
+aggregate signal for sector-level inference despite low edge precision;
+LASSO's near-empty networks suppress sector rankings.
 
 \subsection{Constructive Strategies}
 
-Three approaches can improve reliability at low $T/N$:
-
-\paragraph{1. Use higher-frequency data.} Hourly or 5-minute returns
+Three approaches improve reliability: (1) Use hourly/5-minute data (increases
+$T$ by 10--80×; trade-off: microstructure noise). (2) Aggregate to 10--20
+sectors instead of 100 stocks ($N=12$ sectors, $T=500$ → $T/N=41.7$, above
+threshold; sacrifice granularity, gain validity). (3) FDR-controlled inference
+(stability selection, Benjamini-Hochberg) makes uncertainty
 increase $T$ by 10--80x, pushing $T/N$ above the threshold. Trade-off:
 microstructure noise contaminates intraday TE estimates.
 
