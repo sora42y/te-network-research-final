@@ -396,71 +396,17 @@ We form quintile portfolios sorted on NIO (equal-weighted, 5-day forward
 factor-adjusted returns) and a binary split: connected ($\mathrm{NIO} \neq 0$)
 vs.\ isolated ($\mathrm{NIO} = 0$) stocks.
 
-\subsection{Why Linear Methods? A Nonparametric TE Comparison}
-\label{sec:nonparametric}
+\subsection{Cross-Sectional Testing}
 
-Our framework relies on linear VAR and Gaussian assumptions, which reduce TE
-to Granger causality. A natural question is whether nonparametric TE estimators
----which do not assume linearity---would perform better at low $T/N$.
+We form quintile portfolios sorted on NIO (equal-weighted, 5-day forward
+factor-adjusted returns) and a binary split: connected ($\mathrm{NIO} \neq 0$)
+vs.\ isolated ($\mathrm{NIO} = 0$) stocks.
 
-We test this by implementing a KNN-based nonparametric TE estimator
-(Kozachenko-Leonenko entropy, $k=3$ nearest neighbors) and comparing it
-to OLS and LASSO under the same GARCH+Factor DGP. Table~\ref{tab:nonparametric_te}
-and Figure~\ref{fig:nonparametric_te} show the results.
-
-\begin{table}[H]
-  \centering
-  \caption{Nonparametric vs Linear TE: Precision Comparison (GARCH+Factor DGP)}
-  \label{tab:nonparametric_te}
-  \small
-  \begin{tabular}{lccc}
-    \toprule
-    & \multicolumn{2}{c}{Precision (mean $\pm$ std)} \\
-    \cmidrule(lr){2-3}
-    $T/N$ & LASSO & KNN (Nonparametric) \\
-    \midrule
-    0.6 & 5.9\% $\pm$ 6.9\% & 6.3\% $\pm$ 4.6\% \\
-    2.5 & 14.7\% $\pm$ 13.4\% & 6.7\% $\pm$ 5.4\% \\
-    5.0 & 31.8\% $\pm$ 19.5\% & 6.1\% $\pm$ 5.5\% \\
-    \midrule
-    \multicolumn{3}{l}{\textit{Random baseline: 5\% (sparse network, 5\% edge density)}} \\
-    \multicolumn{3}{l}{\textit{OLS excluded: undefined at $T/N < 1$ (matrix not invertible)}} \\
-    \bottomrule
-  \end{tabular}
-  \medskip\\
-  \footnotesize
-  \textit{Note:} KNN-based nonparametric TE (Kozachenko-Leonenko entropy estimator,
-  $k=3$ nearest neighbors) performs near-random at all $T/N < 5$, with precision
-  barely above the 5\% baseline. LASSO, despite relying on linear assumptions,
-  achieves 6--77\% precision depending on $T/N$. At financial sample sizes
-  ($T/N < 5$), nonparametric methods suffer catastrophic dimensionality curse;
-  linear methods are the only feasible approach. Mean $\pm$ std from 50 trials.
-\end{table}
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.85\textwidth]{figure_nonparametric_te.png}
-  \caption{Nonparametric vs Linear TE: Precision at Low $T/N$. KNN-based
-           nonparametric TE achieves 6--13\% precision across all $T/N$ ratios,
-           barely above random (5\% baseline). LASSO improves from 6\% at
-           $T/N=0.6$ to 77\% at $T/N=5.0$. The dimensionality curse of
-           nonparametric entropy estimation makes it impractical for financial
-           networks; linear methods, despite theoretical limitations, are the
-           only computationally viable option.}
-  \label{fig:nonparametric_te}
-\end{figure}
-
-The result is clear: nonparametric TE performs \emph{worse} than linear methods
-at all financial $T/N$ ratios. At $T/N = 5$, KNN achieves 6.1\% precision
-(near-random), while LASSO reaches 31.8\%. The gap widens at higher $T/N$:
-at $T/N=5$ with $N=50$, LASSO precision is 77\% vs.\ KNN's 13\%.
-
-This vindicates the linear framework. While it is true that linear TE cannot
-capture nonlinear dynamics, the alternative---nonparametric estimation---fails
-catastrophically under the curse of dimensionality. At $T/N < 5$, entropy
-estimation in even moderate dimensions ($d \geq 2$) requires sample sizes
-far beyond what financial data provide. Linear methods are not a theoretical
-ideal; they are a \emph{practical necessity}.
+\paragraph{On nonparametric TE.} We also tested KNN-based nonparametric TE
+estimators. They perform worse than linear methods at all $T/N < 10$,
+achieving near-random precision (6--13\%). See Appendix~\ref{app:nonparametric}
+for details. Linear methods, while theoretically limited, are the only
+computationally feasible option at financial sample sizes.
 
 % ============================================================
 % 4. Simulation: Matched-DGP Validation
@@ -1237,49 +1183,22 @@ higher per-edge precision but suppresses so many edges that sector-level
 inference also fails. Neither estimator reliably recovers the full
 edge topology at financially relevant $T/N$ ratios.
 
-\subsection{Constructive Path Forward}
+\subsection{Constructive Strategies}
 
-Three operational strategies can improve node-level reliability:
+Three approaches can improve reliability at low $T/N$:
 
-\paragraph{Strategy 1: Temporal aggregation (raise $T$).}
-Higher-frequency data --- hourly or 5-minute returns --- can increase $T$
-by a factor of 10--80 within the same calendar window, pushing $T/N$
-above the critical threshold. The trade-off is that microstructure noise
-contaminates hourly TE estimates; bid-ask bounce and non-synchronous
-trading introduce spurious directed flows. Researchers using intraday data
-should apply Epps-effect corrections and verify that TE estimates are
-stable across sampling frequencies.
+\paragraph{1. Use higher-frequency data.} Hourly or 5-minute returns
+increase $T$ by 10--80x, pushing $T/N$ above the threshold. Trade-off:
+microstructure noise contaminates intraday TE estimates.
 
-\paragraph{Strategy 2: Cross-sectional aggregation (reduce $N$).}
-Aggregating to sector- or industry-level indices reduces the effective $N$
-from hundreds to 10--20, dramatically improving $T/N$. A universe of
-$N=12$ GICS sectors with $T=500$ daily observations yields $T/N=41.7$,
-well above the reliable estimation threshold. Sector-level TE networks
-sacrifice granularity but gain statistical validity; hub identification
-at the sector level is interpretable and replicable.
+\paragraph{2. Aggregate cross-sectionally.} Reduce $N$ to 10--20 sectors
+instead of hundreds of stocks. At $N=12$ GICS sectors with $T=500$ days,
+$T/N=41.7$—well above the reliable range. Sector-level networks sacrifice
+granularity but gain statistical validity.
 
-\paragraph{Strategy 3: Regularization with FDR control (improve edge selection).}
-Our Elastic Net sweep (Section~\ref{sec:enet}) demonstrates that the
-precision--recall barrier is a property of the regularization \emph{family},
-not any specific estimator. A complementary approach is stability selection
-\citep{buhlmann2011} or Benjamini--Hochberg FDR control applied to edge
-$p$-values from block bootstrap. These procedures provide finite-sample
-guarantees on false discovery rate, converting the network estimation
-problem from a point-estimation exercise into a controlled multiple-testing
-framework. While they do not overcome the fundamental $T/N$ constraint,
-they make the uncertainty explicit and quantifiable.
-
-\subsection{Scope of the Linear Audit}
-
-Our simulation framework uses linear VAR(1) DGPs, which implies that our
-TE estimator is equivalent to a Granger causality test. Our conclusions
-apply most directly to \emph{linear-predictable} directed relationships.
-Whether they extend to nonparametric TE estimators (kernel density,
-$k$-nearest neighbour) depends on the degree of nonlinearity in the
-true DGP, which we do not model; we encourage simulation-based
-validation of nonparametric TE procedures at financially relevant $T/N$
-as a direction for future work.
-
+\paragraph{3. Use FDR-controlled inference.} Stability selection or
+Benjamini--Hochberg FDR control on edge $p$-values makes uncertainty
+explicit. Does not overcome $T/N$ constraints but quantifies them.
 
 % ============================================================
 % 7. Conclusion
@@ -1318,6 +1237,61 @@ do not work.
 % Appendix
 % ============================================================
 \appendix
+
+\section{Nonparametric TE Comparison}
+\label{app:nonparametric}
+
+Our framework uses linear VAR, which reduces TE to Granger causality under
+Gaussianity. A natural question is whether nonparametric TE estimators
+perform better at low $T/N$.
+
+We implemented a KNN-based nonparametric TE estimator (Kozachenko-Leonenko
+entropy, $k=3$ nearest neighbors) and compared it to LASSO under the same
+GARCH+Factor DGP. Table~\ref{tab:nonparametric_te} and
+Figure~\ref{fig:nonparametric_te} show the results.
+
+\begin{table}[H]
+  \centering
+  \caption{Nonparametric vs Linear TE: Precision Comparison (GARCH+Factor DGP)}
+  \label{tab:nonparametric_te}
+  \small
+  \begin{tabular}{lccc}
+    \toprule
+    & \multicolumn{2}{c}{Precision (mean $\pm$ std)} \\
+    \cmidrule(lr){2-3}
+    $T/N$ & LASSO & KNN (Nonparametric) \\
+    \midrule
+    0.6 & 5.9\% $\pm$ 6.9\% & 6.3\% $\pm$ 4.6\% \\
+    2.5 & 14.7\% $\pm$ 13.4\% & 6.7\% $\pm$ 5.4\% \\
+    5.0 & 31.8\% $\pm$ 19.5\% & 6.1\% $\pm$ 5.5\% \\
+    \midrule
+    \multicolumn{3}{l}{\textit{Random baseline: 5\% (sparse network, 5\% edge density)}} \\
+    \multicolumn{3}{l}{\textit{OLS excluded: undefined at $T/N < 1$}} \\
+    \bottomrule
+  \end{tabular}
+  \medskip\\
+  \footnotesize
+  \textit{Note:} KNN performs near-random at all $T/N < 5$. LASSO achieves
+  6--77\% precision. Nonparametric methods suffer catastrophic dimensionality
+  curse; linear methods are the only feasible approach. Mean $\pm$ std, 50 trials.
+\end{table}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\textwidth]{figure_nonparametric_te.png}
+  \caption{Nonparametric vs Linear TE precision. KNN achieves 6--13\% across
+           all $T/N$ ratios (near random). LASSO improves from 6\% at $T/N=0.6$
+           to 77\% at $T/N=5.0$. Linear methods, despite theoretical limitations,
+           are the only computationally viable option at financial sample sizes.}
+  \label{fig:nonparametric_te}
+\end{figure}
+
+At $T/N=5$, KNN achieves 6.1\% precision (near-random); LASSO reaches 31.8\%.
+At higher $T/N$, the gap widens: LASSO precision is 77\% vs.\ KNN's 13\% at
+$(N=50, T=250)$. Nonparametric estimation fails catastrophically under the
+curse of dimensionality. Entropy estimation in even moderate dimensions
+($d \geq 2$) requires sample sizes far beyond what financial data provide.
+
 \section{Hub Recovery Rate: Detailed Results}
 \label{app:hub}
 
