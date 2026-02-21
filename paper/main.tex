@@ -623,6 +623,11 @@ Only 27--33\% of rolling windows produce any connected nodes.
 \subsection{Cross-Sectional NIO Signal}
 \label{sec:nio}
 
+Table~\ref{tab:pilot} reports quintile portfolio returns sorted on
+factor-neutral OLS-TE NIO. No quintile produces significant returns;
+the long-short spread reverses sign between sub-periods ($-15\%$ in
+2021--2023, $+9\%$ in 2023--2026, neither significant).
+
 \begin{table}[htbp]
   \centering
   \caption{Portfolio Sort: Factor-Neutral OLS-TE NIO
@@ -872,18 +877,8 @@ Three approaches improve reliability: (1) Use hourly/5-minute data (increases
 $T$ by 10--80×; trade-off: microstructure noise). (2) Aggregate to 10--20
 sectors instead of 100 stocks ($N=12$ sectors, $T=500$ → $T/N=41.7$, above
 threshold; sacrifice granularity, gain validity). (3) FDR-controlled inference
-(stability selection, Benjamini-Hochberg) makes uncertainty
-increase $T$ by 10--80x, pushing $T/N$ above the threshold. Trade-off:
-microstructure noise contaminates intraday TE estimates.
-
-\paragraph{2. Aggregate cross-sectionally.} Reduce $N$ to 10--20 sectors
-instead of hundreds of stocks. At $N=12$ GICS sectors with $T=500$ days,
-$T/N=41.7$—well above the reliable range. Sector-level networks sacrifice
-granularity but gain statistical validity.
-
-\paragraph{3. Use FDR-controlled inference.} Stability selection or
-Benjamini--Hochberg FDR control on edge $p$-values makes uncertainty
-explicit. Does not overcome $T/N$ constraints but quantifies them.
+(stability selection, Benjamini-Hochberg) makes uncertainty explicit;
+does not overcome $T/N$ constraints but quantifies them.
 
 % ============================================================
 % 7. Conclusion
@@ -1021,6 +1016,9 @@ from a universe of $N$ stocks.
   financially relevant $T/N$ ratios.
 \end{table}
 
+These results confirm that hub recovery remains poor even when edge precision
+improves. LASSO-TE achieves 95\% precision at $T/N=5$ but only 30\% hub
+recovery---the sparse network contains too few edges to reliably rank nodes.
 
 \subsection{Horizon Robustness}
 \label{sec:horizon}
