@@ -70,9 +70,8 @@ unreliable; aggregate trends may be defensible.
 \medskip\noindent\textbf{Keywords:} Transfer entropy, Granger causality,
 financial networks, estimation reliability, hub detection, LASSO-VAR,
 $T/N$ barrier.
-$T/N$ barrier.
 
-\medskip\noindent\textbf{JEL Classification:} G12, G14, C55, C58.
+\medskip\noindent\textbf{JEL Classification:} G12, G14, C55, C58.\medskip\noindent\textbf{JEL Classification:} G12, G14, C55, C58.
 \end{abstract}
 
 \newpage
@@ -253,15 +252,13 @@ Table~\ref{tab:literature}.
     and downstream signals constructed from it (NIO, centrality, hub rankings)
     are dominated by estimation noise.
 
-  \item \textbf{Separating statistical and economic failure modes.}
-    Even if networks were perfectly estimated, the downstream applications
-    may not work. We test this directly using oracle NIO (Section~\ref{sec:oracle_nio}):
-    computing network outflow from the true adjacency matrix and checking
-    whether it predicts simulated returns. It does not ($t = -0.05$).
-    This separates two independent problems in the literature: (i) networks
-    are not reliably estimated at low $T/N$, and (ii) the economic mechanism
-    linking network position to return predictability may be absent. Prior
-    studies conflated these; we isolate them.
+  \item \textbf{Power analysis: signal degradation under estimation noise.}
+    We embed a known 10\% annualized network premium in simulated data and
+    measure how estimation noise degrades the signal (Section~\ref{sec:oracle_nio}).
+    Oracle $t=5.74$ (significant); estimated $t \approx 0.7$ at $T/N=5$ (noise).
+    Even with 30\% annualized premia, signals barely emerge at $T/N=10$.
+    This sets a lower bound on required $T/N$ for detectability: estimation
+    noise alone destroys plausible network-return channels at typical sample sizes.
 \end{enumerate}
 
 \subsection{Roadmap}
@@ -394,12 +391,6 @@ model improvement.
 
 We form quintile portfolios sorted on NIO (equal-weighted, 5-day forward
 factor-adjusted returns) and a binary split: connected ($\mathrm{NIO} \neq 0$)
-vs.\ isolated ($\mathrm{NIO} = 0$) stocks.
-
-\subsection{Cross-Sectional Testing}
-
-We form quintile portfolios sorted on NIO (equal-weighted, 5-day forward
-factor-adjusted returns) and a binary split: connected ($\mathrm{NIO} \neq 0$)
 vs.\ isolated ($\mathrm{NIO} = 0$) stocks. We tested KNN-based nonparametric TE
 ($k=3$); precision was near-random at all $T/N$, consistent with the well-known
 dimensionality curse of kernel entropy estimators (Appendix~\ref{app:nonparametric}).
@@ -428,9 +419,8 @@ Table~\ref{tab:literature}:
         nonzero entries $\sim \mathcal{U}([-0.15,-0.05] \cup [0.05,0.15])$,
         rescaled to spectral radius 0.9.
         These parameters are illustrative; density sensitivity
-        (2\%--20\%) and spectral-radius robustness
-        ($\rho\in\{0.5,0.7,0.9\}$) are reported in
-        Sections~\ref{sec:density}--\ref{sec:var2}.
+        (2\%--20\%) and other robustness checks are reported in
+        Appendix~\ref{app:robustness}.
   \item $\sigma_{i,t}^2 = \omega_i + \alpha_i u_{i,t-1}^2 + \beta_i
         \sigma_{i,t-1}^2$: GARCH(1,1) with $\alpha_i \sim \mathcal{U}(0.05,
         0.10)$ and $\beta_i \sim \mathcal{U}(0.85, 0.90)$.
@@ -1301,13 +1291,6 @@ PageRank all fail to identify hubs reliably at $T/N \leq 5$.
   WOD modestly outperforms NIO in Kendall $\tau$ (0.18 vs.\ 0.08 at $T/N=5$)
   but no signal consistently exceeds 25\% hub recovery.
 \end{table}
-
-\subsection{Oracle NIO Test: Moved to Main Text}
-\label{sec:identification}
-
-The oracle NIO test has been promoted to Section~\ref{sec:oracle_nio}
-in the main text, reflecting its importance as an independent economic
-finding rather than a supplementary robustness check.
 
 \section*{Data and Code Availability}
 
