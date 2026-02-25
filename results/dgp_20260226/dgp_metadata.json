@@ -1,0 +1,24 @@
+{
+  "fingerprint": "f3642676e5ad0627",
+  "timestamp": "2026-02-25T23:13:48.058335+00:00",
+  "script": "src\\extended_dgp.py",
+  "git_commit": "47c07badd552f1023ddb394115a8da6d582b772b",
+  "params": {
+    "N": 50,
+    "T": 250,
+    "seed_base": 42,
+    "dgp_type": "garch_factor",
+    "garch_alpha": 0.08,
+    "garch_beta": 0.9,
+    "innovation_df": 5,
+    "n_factors": 3
+  },
+  "sha": {
+    "script": "7448a0372501f5c03ec7bc17b0a3625595f5b3bedf35046613839cc5ab06fd8a",
+    "env": "6c73819d87b1c6a4f5a5c073d1563e635d3eddd33b99408cc175289b812c53f7",
+    "params": "89e7de0fdb9a7767b7734540e3401912a2f808437414f98e85f458ea2cf5e358",
+    "src": "f63d80b2ef614688d9b7454b95e0f7bade0bccc0292193eee7bc880168157559"
+  },
+  "lineage": [],
+  "output_dir": "results\\dgp_20260226"
+}

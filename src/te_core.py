@@ -73,6 +73,8 @@ def _compute_ols_te_matrix(R, t_threshold=2.0):
     beyond r_{i,t-1}. Include edge if |t-stat| > threshold.
     
     Internal function - use compute_linear_te_matrix(method='ols') instead.
+    
+    Implementation note: Uses np.mean() for variance (matches original implementation).
     """
     T, N = R.shape
     R_t = R[1:]      # (T-1, N) current values
@@ -82,42 +84,45 @@ def _compute_ols_te_matrix(R, t_threshold=2.0):
     TE_matrix = np.zeros((N, N))
     A_binary = np.zeros((N, N), dtype=int)
     
+    ones = np.ones((T_eff, 1))
+    
     for i in range(N):
-        # Restricted model: r_i(t) ~ r_i(t-1)
         y = R_t[:, i]
-        X_res = R_lag[:, i].reshape(-1, 1)
         
-        # Add constant
-        X_res = np.column_stack([np.ones(T_eff), X_res])
-        
-        # Fit restricted model
+        # Restricted model: r_i(t) ~ r_i(t-1) + constant
+        X_res = np.column_stack([ones, R_lag[:, i]])
         beta_res = np.linalg.lstsq(X_res, y, rcond=None)[0]
         resid_res = y - X_res @ beta_res
-        var_res = (resid_res ** 2).sum() / (T_eff - 2)
+        sigma2_res = np.mean(resid_res ** 2)  # Use mean (original implementation)
         
         for j in range(N):
             if i == j:
                 continue
             
-            # Unrestricted model: r_i(t) ~ r_i(t-1) + r_j(t-1)
-            X_full = np.column_stack([np.ones(T_eff), R_lag[:, i], R_lag[:, j]])
-            
-            # Fit full model
+            # Unrestricted model: r_i(t) ~ r_i(t-1) + r_j(t-1) + constant
+            X_full = np.column_stack([ones, R_lag[:, i], R_lag[:, j]])
             beta_full = np.linalg.lstsq(X_full, y, rcond=None)[0]
             resid_full = y - X_full @ beta_full
-            var_full = (resid_full ** 2).sum() / (T_eff - 3)
+            sigma2_full = np.mean(resid_full ** 2)  # Use mean (original implementation)
             
-            # Compute TE
-            if var_full > 0 and var_res > 0:
-                TE_matrix[i, j] = 0.5 * np.log(var_res / var_full)
+            # Skip if variance estimate invalid
+            if sigma2_full < 1e-12 or sigma2_res < sigma2_full:
+                continue
             
             # t-statistic for coefficient of r_j(t-1)
-            if var_full > 0:
-                se_beta = np.sqrt(var_full * np.linalg.inv(X_full.T @ X_full)[2, 2])
-                t_stat = abs(beta_full[2] / se_beta) if se_beta > 0 else 0
-                
-                if t_stat > t_threshold:
-                    A_binary[i, j] = 1
+            dof = T_eff - 3
+            s2 = np.sum(resid_full ** 2) / dof
+            try:
+                cov = s2 * np.linalg.inv(X_full.T @ X_full)
+                se_j = np.sqrt(cov[2, 2])
+                t_stat = abs(beta_full[2] / (se_j + 1e-12))
+            except:
+                t_stat = 0
+            
+            # Include edge only if t-stat exceeds threshold
+            if t_stat > t_threshold:
+                TE_matrix[i, j] = 0.5 * np.log(sigma2_res / sigma2_full)
+                A_binary[i, j] = 1
     
     return TE_matrix, A_binary
 
