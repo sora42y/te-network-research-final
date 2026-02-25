@@ -18,7 +18,7 @@ import warnings; warnings.filterwarnings('ignore')
 import sys
 sys.path.insert(0, str(Path(__file__).parent))
 from extended_dgp import generate_sparse_var_extended
-from lasso_simulation import compute_lasso_te_matrix, compute_ols_te_matrix
+from te_core import compute_linear_te_matrix
 
 OUTPUT    = Path(r'C:\Users\soray\.openclaw\workspace\te_network_research\results')
 SEED_BASE = 42
@@ -169,3 +169,5 @@ for meth in ['OLS','LASSO']:
               f"  {r['hub_recovery']:.3f}±{r['hub_recovery_ci']:.3f}")
 
 print("\nDone.")
+
+

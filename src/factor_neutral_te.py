@@ -141,12 +141,8 @@ def compute_transfer_entropy(returns, lag=1, bins=10):
     """
     Compute pairwise Transfer Entropy matrix using vectorized linear TE.
     
-    TE(j -> i) measures how much knowing r_j,t-1 reduces uncertainty about r_i,t
-    beyond what r_i,t-1 already tells us.
-    
-    Linear TE formula: TE[j→i] = 0.5 * ln(var_restricted / var_full)
-    - Restricted: r_i(t) ~ r_i(t-1)
-    - Full: r_i(t) ~ r_i(t-1) + r_j(t-1)
+    DEPRECATED: Use te_core.compute_linear_te_matrix() instead.
+    This wrapper maintained for backward compatibility.
     
     Args:
         returns (pd.DataFrame): Returns (T x N)
@@ -156,10 +152,25 @@ def compute_transfer_entropy(returns, lag=1, bins=10):
     Returns:
         pd.DataFrame: TE matrix (N x N), where TE[i,j] = TE from i to j
     """
-    print(f"Computing Transfer Entropy (vectorized linear, lag={lag})...")
+    import warnings
+    warnings.warn(
+        "compute_transfer_entropy() is deprecated. Use te_core.compute_linear_te_matrix() instead.",
+        DeprecationWarning,
+        stacklevel=2
+    )
     
-    if lag != 1:
-        print(f"Warning: lag={lag} requested, but only lag=1 is supported. Using lag=1.")
+    # Use unified implementation
+    from te_core import compute_linear_te_matrix
+    
+    R = returns.values if hasattr(returns, 'values') else returns
+    te_matrix, _ = compute_linear_te_matrix(R, method='ols', t_threshold=0.0)
+    
+    # Convert back to DataFrame
+    if hasattr(returns, 'columns'):
+        import pandas as pd
+        te_matrix = pd.DataFrame(te_matrix, index=returns.columns, columns=returns.columns)
+    
+    return te_matrix
     
     # Convert to numpy
     R = returns.values  # (T, N)

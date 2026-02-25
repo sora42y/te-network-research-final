@@ -23,7 +23,7 @@ import warnings; warnings.filterwarnings('ignore')
 import sys
 sys.path.insert(0, str(Path(__file__).parent))
 from extended_dgp import generate_sparse_var_extended
-from lasso_simulation import compute_lasso_te_matrix, compute_ols_te_matrix
+from te_core import compute_linear_te_matrix
 
 OUTPUT   = Path(r'C:\Users\soray\.openclaw\workspace\te_network_research\results')
 SEED_BASE = 42
@@ -79,8 +79,8 @@ def run_oracle_extended():
                 base = dict(N=N, T=T, T_N=round(T/N,1), trial=trial)
                 for Rdata, label in [(R,'Raw'),(R_oracle,'Oracle'),(R_est,'Estimated(PCA)')]:
                     for mname, A_pred in [
-                        ('OLS',   compute_ols_te_matrix(Rdata)[1]),
-                        ('LASSO', compute_lasso_te_matrix(Rdata)[1]),
+                        ('OLS',   compute_linear_te_matrix(Rdata, method="ols", t_threshold=2.0)[1]),
+                        ('LASSO', compute_linear_te_matrix(Rdata, method="lasso")[1]),
                     ]:
                         m = eval_metrics(A_true, A_pred)
                         m.update({**base, 'preprocess': label, 'method': mname})
@@ -163,15 +163,15 @@ def run_threshold_var_wide():
                 seed = SEED_BASE+trial*1000+N+T
                 # Linear baseline
                 R_lin, _, A_lin = generate_sparse_var_extended(N=N,T=T,density=0.05,seed=seed,dgp='garch_factor')
-                for meth, Ap in [('OLS',compute_ols_te_matrix(R_lin)[1]),
-                                  ('LASSO',compute_lasso_te_matrix(R_lin)[1])]:
+                for meth, Ap in [('OLS',compute_linear_te_matrix(R_lin, method="ols", t_threshold=2.0)[1]),
+                                  ('LASSO',compute_linear_te_matrix(R_lin, method="lasso")[1])]:
                     m = eval_metrics(A_lin, Ap)
                     m.update(dict(N=N,T=T,T_N=round(T/N,2),trial=trial,dgp='linear',method=meth))
                     results.append(m); pbar.update(1)
                 # Threshold-VAR
                 R_thr, A_thr, _, _ = generate_threshold_var_v2(N=N,T=T,density=0.05,seed=seed)
-                for meth, Ap in [('OLS',compute_ols_te_matrix(R_thr)[1]),
-                                  ('LASSO',compute_lasso_te_matrix(R_thr)[1])]:
+                for meth, Ap in [('OLS',compute_linear_te_matrix(R_thr, method="ols", t_threshold=2.0)[1]),
+                                  ('LASSO',compute_linear_te_matrix(R_thr, method="lasso")[1])]:
                     m = eval_metrics(A_thr, Ap)
                     m.update(dict(N=N,T=T,T_N=round(T/N,2),trial=trial,dgp='threshold',method=meth))
                     results.append(m); pbar.update(1)
@@ -234,15 +234,15 @@ def run_var2():
                 seed = SEED_BASE+trial*1000+N+T
                 # VAR(1) baseline
                 R1, _, A1 = generate_sparse_var_extended(N=N,T=T,density=0.05,seed=seed,dgp='garch_factor')
-                for meth, Ap in [('OLS',compute_ols_te_matrix(R1)[1]),
-                                  ('LASSO',compute_lasso_te_matrix(R1)[1])]:
+                for meth, Ap in [('OLS',compute_linear_te_matrix(R1, method="ols", t_threshold=2.0)[1]),
+                                  ('LASSO',compute_linear_te_matrix(R1, method="lasso")[1])]:
                     m = eval_metrics(A1, Ap)
                     m.update(dict(N=N,T=T,T_N=round(T/N,2),trial=trial,dgp='VAR1',method=meth))
                     results.append(m); pbar.update(1)
                 # VAR(2) with lag-1 estimation
                 R2, A2 = generate_var2(N=N,T=T,density=0.05,seed=seed)
-                for meth, Ap in [('OLS',compute_ols_te_matrix(R2)[1]),
-                                  ('LASSO',compute_lasso_te_matrix(R2)[1])]:
+                for meth, Ap in [('OLS',compute_linear_te_matrix(R2, method="ols", t_threshold=2.0)[1]),
+                                  ('LASSO',compute_linear_te_matrix(R2, method="lasso")[1])]:
                     m = eval_metrics(A2, Ap)
                     m.update(dict(N=N,T=T,T_N=round(T/N,2),trial=trial,dgp='VAR2',method=meth))
                     results.append(m); pbar.update(1)
@@ -282,11 +282,11 @@ def run_alternative_signals():
                 true_hubs = set(np.argsort(true_od)[-5:])
 
                 # LASSO-TE
-                TE_las, A_las = compute_lasso_te_matrix(R)
+                TE_las, A_las = compute_linear_te_matrix(R, method="lasso")
                 np.fill_diagonal(TE_las, 0)
 
                 # OLS-TE
-                TE_ols, A_ols = compute_ols_te_matrix(R)
+                TE_ols, A_ols = compute_linear_te_matrix(R, method="ols", t_threshold=2.0)
                 np.fill_diagonal(TE_ols, 0)
 
                 for label, TE_mat, A_mat in [
@@ -342,7 +342,7 @@ def run_simulation_nio_baseline():
                 # Oracle NIO (from true A)
                 oracle_nio = (A_true.sum(axis=1) - A_true.sum(axis=0)).astype(float)
                 # LASSO NIO
-                TE_las, _ = compute_lasso_te_matrix(R_est)
+                TE_las, _ = compute_linear_te_matrix(R_est, method="lasso")
                 np.fill_diagonal(TE_las, 0)
                 lasso_nio = TE_las.sum(axis=1) - TE_las.sum(axis=0)
 
@@ -389,3 +389,5 @@ if __name__ == '__main__':
     run_alternative_signals()   # #10 ~15min
     run_simulation_nio_baseline() # #11 ~10min
     print(f"\n=== ALL DONE in {(time.time()-t0)/60:.1f} min ===")
+
+

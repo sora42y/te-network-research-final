@@ -9,7 +9,7 @@ import sys
 
 BASE = Path(r'C:\Users\soray\.openclaw\workspace\te_network_research')
 sys.path.insert(0, str(BASE))
-from lasso_simulation import compute_lasso_te_matrix, compute_ols_te_matrix
+from te_core import compute_linear_te_matrix
 
 OUTPUT    = BASE / 'results'
 SEED_BASE = 42
@@ -88,3 +88,5 @@ for meth in ['OLS','LASSO']:
           f"(|t|>1.96: {(sub['hub_nio_tstat'].abs()>1.96).mean():.0%})")
 
 print("\nDone.")
+
+

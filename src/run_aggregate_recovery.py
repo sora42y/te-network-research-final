@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 import warnings; warnings.filterwarnings('ignore')
 import sys
 sys.path.insert(0, str(Path(__file__).parent))
-from lasso_simulation import compute_lasso_te_matrix, compute_ols_te_matrix
+from te_core import compute_linear_te_matrix
 
 OUTPUT = Path(r'C:\Users\soray\.openclaw\workspace\te_network_research\results')
 SEED_BASE = 42
@@ -194,8 +194,8 @@ def run_design_B():
         t1 = t0 + T_w
         chunk = R[t0:t1]
         try:
-            _, Ap_ols  = compute_ols_te_matrix(chunk)
-            _, Ap_las  = compute_lasso_te_matrix(chunk)
+            _, Ap_ols  = compute_linear_te_matrix(chunk, method="ols", t_threshold=2.0)
+            _, Ap_las  = compute_linear_te_matrix(chunk, method="lasso")
             ols_dens.append(estimated_density(Ap_ols))
             las_dens.append(estimated_density(Ap_las))
         except:
@@ -223,8 +223,8 @@ def run_design_B():
         for t0 in windows:
             chunk = R2[t0:t0+T_w]
             try:
-                _, Ao = compute_ols_te_matrix(chunk)
-                _, Al = compute_lasso_te_matrix(chunk)
+                _, Ao = compute_linear_te_matrix(chunk, method="ols", t_threshold=2.0)
+                _, Al = compute_linear_te_matrix(chunk, method="lasso")
                 od.append(estimated_density(Ao))
                 ld.append(estimated_density(Al))
             except:
@@ -370,3 +370,5 @@ if __name__ == '__main__':
     dfB, mc_df    = run_design_B()      # ~10 min (30 trials)
     dfC           = run_sector_hub()    # ~15 min (100 trials)
     print(f"\n=== ALL DONE in {(time.time()-t0)/60:.1f} min ===")
+
+

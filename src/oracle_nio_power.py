@@ -23,7 +23,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).parent))
 
 from extended_dgp_planted_signal import generate_sparse_var_with_nio_premium
-from lasso_simulation import compute_ols_te_matrix, compute_lasso_te_matrix
+from te_core import compute_linear_te_matrix
 
 # ============================================================================
 # Configuration
@@ -148,8 +148,8 @@ def run_power_analysis(trials=50):
                 nio_oracle = compute_nio(A_true_binary.astype(float))
                 
                 # Estimate TE networks
-                te_lasso, adj_lasso = compute_lasso_te_matrix(R)
-                te_ols, adj_ols = compute_ols_te_matrix(R, t_threshold=2.0)
+                te_lasso, adj_lasso = compute_linear_te_matrix(R, method="lasso")
+                te_ols, adj_ols = compute_linear_te_matrix(R, method="ols", t_threshold=2.0)
                 
                 # Compute estimated NIOs
                 nio_lasso = compute_nio(adj_lasso.astype(float))
@@ -271,3 +271,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
