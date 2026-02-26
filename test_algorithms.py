@@ -99,6 +99,9 @@ class TestLASSO_TE:
         
         te_matrix, adj = compute_linear_te_matrix(R, method='lasso')
         
+        # P2 FIX: Add positive assertion to catch silent LASSO failures
+        assert adj.sum() >= 1, "LASSO should detect at least one edge in causal data"
+        
         # Should produce a sparse network
         density = adj.sum() / (N * (N-1))
         assert density < 0.3, f"Network too dense: {density}"
@@ -111,7 +114,7 @@ class TestLASSO_TE:
         
         te_matrix, adj = compute_linear_te_matrix(R, method='lasso')
         
-        # Should be very sparse
+        # Should be very sparse (but allow some spurious edges)
         assert adj.sum() / (15 * 14) < 0.2, "Too many edges for i.i.d. data"
 
 
@@ -123,8 +126,10 @@ class TestNIO:
         N = 10
         te_matrix = np.zeros((N, N))
         
+        # P1 FIX: Create hub with OUT-edges (corrected for A[i,j] = j->i convention)
         # Node 0 is a hub: 9 out-edges, 0 in-edges
-        te_matrix[0, 1:] = 1.0  # Node 0 points to all others
+        # Column 0 represents edges FROM node 0
+        te_matrix[1:, 0] = 1.0  # Node 0 causes all others (9 out-edges)
         
         nio = compute_nio(te_matrix, method='binary')
         

@@ -98,7 +98,8 @@ def _compute_ols_te_matrix(R, t_threshold=2.0):
                 cov = s2 * np.linalg.inv(X_full.T @ X_full)
                 se_j = np.sqrt(cov[2, 2])
                 t_stat = abs(beta_full[2] / (se_j + 1e-12))
-            except:
+            except np.linalg.LinAlgError:
+                # P1 FIX: Singular matrix (perfect collinearity)
                 t_stat = 0
             
             # Include edge only if t-stat exceeds threshold
@@ -148,9 +149,9 @@ def _compute_lasso_te_matrix(R):
         beta_X = np.linalg.lstsq(X_res_with_const, X_others, rcond=None)[0]
         X_resid = X_others - X_res_with_const @ beta_X
         
-        # Fit LASSO
+        # Fit LASSO (P0 FIX: removed normalize=False for sklearn >= 1.2)
         try:
-            lasso = LassoLarsIC(criterion='bic', max_iter=1000, normalize=False)
+            lasso = LassoLarsIC(criterion='bic', max_iter=1000)
             lasso.fit(X_resid, y_resid)
             coef = lasso.coef_
             
@@ -172,8 +173,10 @@ def _compute_lasso_te_matrix(R):
                     
                     if sigma2_full > 0 and sigma2_res > sigma2_full:
                         TE_matrix[i, j] = 0.5 * np.log(sigma2_res / sigma2_full)
-        except:
-            pass
+        except (ValueError, TypeError, np.linalg.LinAlgError) as e:
+            # P1 FIX: Catch specific exceptions instead of bare except
+            import warnings
+            warnings.warn(f"LASSO fitting failed for edge {i}->{j}: {e}")
     
     return TE_matrix, A_binary
 
@@ -199,19 +202,24 @@ def compute_nio(te_matrix, method='binary'):
     -----
     NIO_i = (out_flow_i - in_flow_i) / (N-1)
     Normalized by N-1 to be comparable across network sizes
+    
+    Matrix convention: TE[i,j] represents j->i causality
+    Therefore: column sums give out-degree, row sums give in-degree
     """
     N = te_matrix.shape[0]
     nio = np.zeros(N)
     
     for i in range(N):
         if method == 'binary':
-            # Binary: count edges
-            out_flow = (te_matrix[i, :] > 0).sum() - (te_matrix[i, i] > 0)
-            in_flow = (te_matrix[:, i] > 0).sum() - (te_matrix[i, i] > 0)
+            # Binary: count edges (P1 FIX: corrected direction)
+            # Column sum (TE[:,i]) = edges FROM i TO others = out-degree
+            # Row sum (TE[i,:]) = edges FROM others TO i = in-degree
+            out_flow = (te_matrix[:, i] > 0).sum() - (te_matrix[i, i] > 0)
+            in_flow = (te_matrix[i, :] > 0).sum() - (te_matrix[i, i] > 0)
         elif method == 'weighted':
-            # Weighted: sum TE values
-            out_flow = te_matrix[i, :].sum() - te_matrix[i, i]
-            in_flow = te_matrix[:, i].sum() - te_matrix[i, i]
+            # Weighted: sum TE values (P1 FIX: corrected direction)
+            out_flow = te_matrix[:, i].sum() - te_matrix[i, i]
+            in_flow = te_matrix[i, :].sum() - te_matrix[i, i]
         else:
             raise ValueError(f"Unknown method: {method}")
         

@@ -42,9 +42,11 @@ def generate_sparse_var_with_nio_premium(N=50, T=500, density=0.05, seed=42,
         N=N, T=T, density=density, seed=seed, dgp=dgp
     )
     
-    # Compute oracle NIO from true A
-    out_flow = A_true.sum(axis=1)  # row sums
-    in_flow = A_true.sum(axis=0)   # column sums
+    # Compute oracle NIO from true A (P1 FIX: corrected direction)
+    # Matrix convention: A[i,j] = j->i
+    # Therefore: column sums = out-degree, row sums = in-degree
+    out_flow = A_true.sum(axis=0)  # column sums = out-degree
+    in_flow = A_true.sum(axis=1)   # row sums = in-degree
     NIO_true = (out_flow - in_flow) / (N - 1)
     
     # Standardize NIO cross-sectionally (mean=0, std=1)
