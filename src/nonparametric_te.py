@@ -26,9 +26,11 @@ import warnings; warnings.filterwarnings('ignore')
 import sys
 sys.path.insert(0, str(Path(__file__).parent))
 from extended_dgp import generate_sparse_var_extended
-from lasso_simulation import compute_lasso_te_matrix, compute_ols_te_matrix
+from te_core import compute_linear_te_matrix
 
-OUTPUT = Path(r'C:\Users\soray\.openclaw\workspace\te_network_research\results')
+# Use relative path from repo root
+REPO_ROOT = Path(__file__).parent.parent
+OUTPUT = REPO_ROOT / "results"
 SEED_BASE = 42
 N_TRIALS = 50  # Reduced from 100 due to computational cost
 TOP_K = 5
@@ -221,14 +223,14 @@ def run_nonparametric_comparison():
             
             # --- Linear methods (baseline) ---
             try:
-                _, A_ols = compute_ols_te_matrix(R, alpha=0.05)
+                _, A_ols = compute_linear_te_matrix(R, method='ols', t_threshold=2.0)
                 metrics_ols = eval_metrics(A_true, A_ols, top_k=TOP_K)
             except:
                 metrics_ols = dict(precision=np.nan, recall=np.nan, f1=np.nan, 
                                    hub_recovery=np.nan, density=np.nan)
             
             try:
-                _, A_lasso = compute_lasso_te_matrix(R)
+                _, A_lasso = compute_linear_te_matrix(R, method='lasso')
                 metrics_lasso = eval_metrics(A_true, A_lasso, top_k=TOP_K)
             except:
                 metrics_lasso = dict(precision=np.nan, recall=np.nan, f1=np.nan,

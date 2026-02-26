@@ -18,7 +18,6 @@ Output:
 
 import numpy as np
 import pandas as pd
-from sklearn.linear_model import LassoLarsIC
 from sklearn.decomposition import PCA
 import argparse
 import sys
@@ -29,11 +28,15 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from extended_dgp import generate_sparse_var_extended
 from factor_neutral_preprocessing import preprocess_returns
+from te_core import compute_linear_te_matrix
 
 
 def estimate_te_network(R, method='ols', penalty_factor=1.0):
     """
     Estimate TE network from return matrix R.
+    
+    DEPRECATED: This is now a thin wrapper around te_core.compute_linear_te_matrix()
+    for backward compatibility.
     
     Parameters
     ----------
@@ -42,86 +45,14 @@ def estimate_te_network(R, method='ols', penalty_factor=1.0):
     method : str
         'ols' or 'lasso'
     penalty_factor : float
-        For LASSO: multiplier on BIC-selected penalty
+        Ignored (kept for backward compatibility)
     
     Returns
     -------
     A_est : ndarray (N, N)
         Estimated adjacency matrix (binary)
     """
-    T, N = R.shape
-    A_est = np.zeros((N, N))
-    
-    if method == 'ols':
-        # OLS with 75th percentile threshold (as in paper)
-        te_matrix = np.zeros((N, N))
-        
-        for i in range(N):
-            y = R[1:, i]
-            
-            for j in range(N):
-                if i == j:
-                    continue
-                
-                # Restricted model: y_t ~ y_{t-1}
-                X_restricted = R[:-1, i].reshape(-1, 1)
-                residuals_restricted = y - X_restricted @ np.linalg.lstsq(X_restricted, y, rcond=None)[0]
-                sigma2_restricted = np.var(residuals_restricted)
-                
-                # Unrestricted model: y_t ~ y_{t-1} + x_{j,t-1}
-                X_full = np.column_stack([R[:-1, i], R[:-1, j]])
-                residuals_full = y - X_full @ np.linalg.lstsq(X_full, y, rcond=None)[0]
-                sigma2_full = np.var(residuals_full)
-                
-                # TE(j → i)
-                if sigma2_full > 0 and sigma2_restricted > 0:
-                    te_matrix[i, j] = 0.5 * np.log(sigma2_restricted / sigma2_full)
-                else:
-                    te_matrix[i, j] = 0
-        
-        # Threshold at 75th percentile
-        te_flat = te_matrix[te_matrix > 0]
-        if len(te_flat) > 0:
-            threshold = np.percentile(te_flat, 75)
-            A_est = (te_matrix >= threshold).astype(int)
-        
-    elif method == 'lasso':
-        # LASSO with own lag unpenalized (Frisch-Waugh residualization)
-        for i in range(N):
-            y = R[1:, i]
-            
-            # Own lag (unpenalized control)
-            own_lag = R[:-1, i].reshape(-1, 1)
-            
-            # Other stocks' lags (penalized)
-            other_idx = [j for j in range(N) if j != i]
-            X_others = R[:-1, other_idx]
-            
-            # Frisch-Waugh: residualize y and X_others on own lag
-            # Step 1: regress y on own_lag
-            beta_y = np.linalg.lstsq(own_lag, y, rcond=None)[0]
-            y_resid = y - own_lag @ beta_y
-            
-            # Step 2: regress X_others on own_lag
-            beta_X = np.linalg.lstsq(own_lag, X_others, rcond=None)[0]
-            X_resid = X_others - own_lag @ beta_X
-            
-            # Fit LASSO on residualized data (cross-lags only)
-            try:
-                lasso = LassoLarsIC(criterion='bic', max_iter=1000)
-                lasso.fit(X_resid, y_resid)
-                coef = lasso.coef_  # (N-1,) for other_idx
-                
-                # Map back to full coefficient vector
-                coef_full = np.zeros(N)
-                for k, j in enumerate(other_idx):
-                    coef_full[j] = coef[k]
-                
-                A_est[i, :] = (coef_full != 0).astype(int)
-            except:
-                # If LASSO fails, leave row as zeros
-                pass
-    
+    _, A_est = compute_linear_te_matrix(R, method=method, t_threshold=2.0)
     return A_est
 
 

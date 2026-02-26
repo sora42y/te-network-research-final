@@ -8,8 +8,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 from pathlib import Path
 
-OUTPUT = Path(r'C:\Users\soray\.openclaw\workspace\te_network_research\results')
-PAPER_ASSETS = Path(r'C:\Users\soray\.openclaw\workspace\te_network_research\paper_assets')
+# Use relative paths
+REPO_ROOT = Path(__file__).parent.parent
+OUTPUT = REPO_ROOT / 'results'
+PAPER_ASSETS = REPO_ROOT / 'paper_assets'
 PAPER_ASSETS.mkdir(exist_ok=True)
 
 # Load summary data

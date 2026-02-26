@@ -23,7 +23,9 @@ sys.path.insert(0, str(Path(__file__).parent))
 from extended_dgp import generate_sparse_var_extended
 from te_core import compute_linear_te_matrix
 
-OUTPUT   = Path(r'C:\Users\soray\.openclaw\workspace\te_network_research\results')
+# Use relative path from repo root
+REPO_ROOT = Path(__file__).parent.parent
+OUTPUT = REPO_ROOT / "results"
 SEED_BASE = 42
 N_TRIALS  = 8
 
