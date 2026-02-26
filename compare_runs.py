@@ -1,4 +1,4 @@
-"""
+﻿"""
 Compare Results Across Runs
 Implements clareLab's suggestion #3: Benchmark comparison
 """
@@ -173,9 +173,9 @@ def main():
                 print(f"  Range: [{stats['min']:.4f}, {stats['max']:.4f}]")
                 
                 if stats['cv'] < 0.05:
-                    print(f"  ✓ STABLE (CV < 5%)")
+                    print(f"  STABLE (CV < 5%)")
                 else:
-                    print(f"  ⚠ UNSTABLE (CV >= 5%)")
+                    print(f"  UNSTABLE (CV >= 5%)")
         
         # Overall assessment
         all_cvs = [stats['cv'] for stats in stability.values() if not np.isnan(stats['cv'])]
@@ -183,7 +183,7 @@ def main():
             max_cv = max(all_cvs)
             print("\n" + "-"*80)
             if max_cv < 0.05:
-                print("OVERALL: ✓ All metrics STABLE across runs (reproducible)")
+                print("OVERALL: All metrics STABLE across runs (reproducible)")
             else:
                 print(f"OVERALL: ⚠ Max CV = {max_cv*100:.2f}% (some instability)")
     elif stability and not np.isnan(stability.get('cv', np.nan)):
@@ -198,9 +198,9 @@ def main():
         print()
         
         if stability['cv'] < 0.05:
-            print("✓ STABLE: CV < 5% - results are reproducible")
+            print("STABLE: CV < 5% - results are reproducible")
         else:
-            print("⚠ UNSTABLE: CV >= 5% - results vary significantly across seeds")
+            print("UNSTABLE: CV >= 5% - results vary significantly across seeds")
     print("\n" + "="*80)
     
     # Calculate differences (if numeric)
@@ -225,3 +225,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+

@@ -264,11 +264,11 @@ def run_table2_simulation(dgp='garch_factor', preprocessing='estimated_fn', meth
             }
             results.append(agg)
             
-            print(f"\n  → Precision: {agg['precision_mean']:.3f} ± {agg['precision_std']:.3f}")
-            print(f"  → Recall: {agg['recall_mean']:.3f} ± {agg['recall_std']:.3f}")
-            print(f"  → F1: {agg['f1_mean']:.3f}")
-            print(f"  → Hub recovery: {agg['hub_recovery_mean']:.3f}")
-            print(f"  → Kendall's τ: {agg['kendall_tau_mean']:.3f}")
+            print(f"\n  -> Precision: {agg['precision_mean']:.3f} +/- {agg['precision_std']:.3f}")
+            print(f"  -> Recall: {agg['recall_mean']:.3f} +/- {agg['recall_std']:.3f}")
+            print(f"  -> F1: {agg['f1_mean']:.3f}")
+            print(f"  -> Hub recovery: {agg['hub_recovery_mean']:.3f}")
+            print(f"  -> Kendall's tau: {agg['kendall_tau_mean']:.3f}")
     
     return pd.DataFrame(results)
 

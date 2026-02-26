@@ -84,7 +84,7 @@ class ResultsManager:
         with open(meta_path, 'w') as f:
             json.dump(metadata, f, indent=2)
         
-        print(f"  ✓ Saved: {table_name}.csv")
+        print(f"Saved: {table_name}.csv")
     
     def save_run_metadata(self, params, script_path='run_experiments_modular.py'):
         """
@@ -149,7 +149,7 @@ class ResultsManager:
                 f.write(f"  {key}: {val}\n")
             f.write(f"\nResults saved in: {self.run_dir}\n")
         
-        print(f"  ✓ Metadata saved: run_metadata.json")
+        print(f"Metadata saved: run_metadata.json")
     
     def _get_git_hash(self):
         """Get current git commit hash"""
