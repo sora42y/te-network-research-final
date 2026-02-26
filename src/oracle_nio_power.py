@@ -23,7 +23,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).parent))
 
 from extended_dgp_planted_signal import generate_sparse_var_with_nio_premium
-from te_core import compute_linear_te_matrix
+from te_core import compute_linear_te_matrix, compute_nio
 
 # ============================================================================
 # Configuration
@@ -40,29 +40,9 @@ PREMIUMS = [0.03, 0.05, 0.10, 0.20, 0.30]  # Annualized L/S spreads
 TRIALS = 50  # Default, can override with --trials
 
 # ============================================================================
+# ============================================================================
 # Helper Functions
 # ============================================================================
-
-def compute_nio(te_matrix):
-    """
-    Compute Net Information Outflow from TE matrix.
-    
-    Args:
-        te_matrix: (N, N) array where [i,j] = TE from i to j
-        
-    Returns:
-        (N,) array of NIO values
-    """
-    N = te_matrix.shape[0]
-    nio = np.zeros(N)
-    
-    for i in range(N):
-        te_out = te_matrix[i, :].sum() - te_matrix[i, i]  # Exclude diagonal
-        te_in = te_matrix[:, i].sum() - te_matrix[i, i]
-        nio[i] = (te_out - te_in) / (N - 1)
-    
-    return nio
-
 
 def cross_sectional_tstat(returns, nio):
     """
