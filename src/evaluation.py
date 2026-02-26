@@ -100,7 +100,8 @@ def cross_sectional_tstat(returns, nio):
         se = np.sqrt(cov[1, 1])
         
         t_stat = beta[1] / se if se > 0 else 0.0
-    except:
+    except (np.linalg.LinAlgError, ValueError) as e:
+        # P1 FIX: Catch specific exceptions (singular matrix, etc.)
         t_stat = 0.0
     
     return t_stat

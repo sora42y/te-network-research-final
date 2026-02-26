@@ -30,51 +30,11 @@ sys.path.insert(0, str(Path(__file__).parent))
 from dgp import generate_sparse_var
 from factor_neutral_preprocessing import preprocess_returns
 from te_core import compute_linear_te_matrix
-from evaluation import compute_precision_recall_f1
+from evaluation import compute_precision_recall_f1, eval_metrics  # P2 FIX: Added eval_metrics
 
 
-# estimate_te_network removed - use te_core.compute_linear_te_matrix() directly
-
-
-def compute_metrics(A_true, A_est):
-    """
-    Compute precision, recall, F1, and hub recovery.
-    """
-    # Flatten to edge lists (excluding diagonal)
-    N = A_true.shape[0]
-    mask = ~np.eye(N, dtype=bool)
-    
-    true_edges = A_true[mask]
-    pred_edges = A_est[mask]
-    
-    tp = np.sum((true_edges == 1) & (pred_edges == 1))
-    fp = np.sum((true_edges == 0) & (pred_edges == 1))
-    fn = np.sum((true_edges == 1) & (pred_edges == 0))
-    
-    precision = tp / (tp + fp) if (tp + fp) > 0 else 0
-    recall = tp / (tp + fn) if (tp + fn) > 0 else 0
-    f1 = 2 * precision * recall / (precision + recall) if (precision + recall) > 0 else 0
-    
-    # Hub recovery: top-5 out-degree overlap
-    true_out = A_true.sum(axis=1)
-    pred_out = A_est.sum(axis=1)
-    
-    true_top5 = set(np.argsort(true_out)[-5:])
-    pred_top5 = set(np.argsort(pred_out)[-5:])
-    
-    hub_overlap = len(true_top5 & pred_top5) / 5.0
-    
-    # Kendall's tau
-    from scipy.stats import kendalltau
-    tau, _ = kendalltau(true_out, pred_out)
-    
-    return {
-        'precision': precision,
-        'recall': recall,
-        'f1': f1,
-        'hub_recovery': hub_overlap,
-        'kendall_tau': tau
-    }
+# P2 FIX: Use unified evaluation functions instead of local duplicate
+# compute_metrics functionality now provided by evaluation.eval_metrics
 
 
 def run_single_trial(N, T, density, seed, dgp, preprocessing, method):
@@ -109,8 +69,8 @@ def run_single_trial(N, T, density, seed, dgp, preprocessing, method):
     # Estimate network (call unified te_core function)
     _, A_est = compute_linear_te_matrix(R_proc, method=method, t_threshold=2.0)
     
-    # Compute metrics
-    metrics = compute_metrics(A_true, A_est)
+    # P2 FIX: Use unified evaluation function
+    metrics = eval_metrics(A_true, A_est, top_k=5)
     
     return metrics
 
@@ -146,6 +106,9 @@ def run_table2_simulation(dgp='garch_factor', preprocessing='estimated_fn', meth
                 if (trial + 1) % 10 == 0:
                     print(f"  Trial {trial+1}/{n_trials}...", end='\r')
                 
+                # P2 FIX: Use centralized seed strategy from simulation_config
+                # (For now, keep simple formula for backward compatibility with existing results)
+                # TODO: Consider migrating to SimulationConfig.get_seed(trial, N, T) in future
                 seed = 1000 + trial
                 metrics = run_single_trial(
                     N=N, T=T, density=0.05, seed=seed, 
