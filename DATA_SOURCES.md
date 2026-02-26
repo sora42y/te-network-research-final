@@ -1,18 +1,32 @@
 # Data Sources Documentation
 
+## ⚠️ IMPORTANT: All Data is Pre-Downloaded and Included
+
+**This repository contains ALL empirical data needed for replication.**
+
+**No external downloads required.** All data files are in `data/empirical/`:
+- `te_features_weekly.csv` (33 MB) - S&P 500 NIO features (2005-2025)
+- `universe_500.csv` (4.8 MB) - Stock universe metadata
+
+**Source code does NOT download data at runtime.** All scripts read from local files.
+
+---
+
 ## Section 5: Empirical Analysis
 
 ### 5.1 Stock Universe Construction
 
 **Source**: CRSP Daily Stock File  
 **Download date**: February 13, 2026  
-**Original file**: `cus249hhsqzrn47s.csv.gz` (CRSP export)
+**Original file**: `crsp_daily_2005_2025.csv.gz` (CRSP export via WRDS)
 
-**Universe Selection Script**: `build_universe_500.py`
+**Note**: Original CRSP file is NOT included (too large, 2+ GB). Only the processed universe and TE features are included.
+
+**Universe Selection Script**: `weekly_te_pipeline_500.py` (historical, for reference only)
 
 **Selection Methodology**:
 1. **Rolling universe**: Monthly rebalanced
-2. **Selection criterion**: Top 500 stocks by 60-day dollar volume
+2. **Selection criterion**: Top ~100 stocks by 60-day dollar volume
 3. **Dollar volume calculation**: `|Price| × Volume`
 4. **Rebalancing frequency**: First trading day of each month
 5. **Lookback window**: 60 calendar days prior to month start
@@ -20,14 +34,15 @@
 **Time Coverage**:
 - Start: February 2005
 - End: December 2025
-- Total months: 251
-- Total observations: 125,500 (251 months × 500 stocks)
-- Unique tickers over full period: 2,320
+- Total weeks: 1,096
+- Unique tickers: ~150 (rotating)
 
-**Data Fields**:
-- `YearMonth`: Month identifier (YYYY-MM)
-- `MonthStart`: First trading day of month
-- `Ticker`: Stock ticker symbol
+**Data Fields** (in `te_features_weekly.csv`):
+- `date`: Week ending date
+- `ticker`: Stock ticker symbol
+- `NIO_raw`, `NIO_fn`: Net Information Outflow (raw / factor-neutral)
+- `ret_fwd_5d`: Forward 5-day return
+- Factor loadings, returns, etc.
 - `DollarVol60d`: Total dollar volume over 60-day window
 
 **Output**: `data/empirical/universe_500.csv` (4.8 MB)

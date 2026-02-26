@@ -1,13 +1,13 @@
 """
 Compare Results Across Runs
-Implements clareLab's suggestion #4: Horizontal comparison
+Implements clareLab's suggestion #3: Benchmark comparison
 """
 
 import argparse
 import json
 import pandas as pd
+import numpy as np
 from pathlib import Path
-from tabulate import tabulate
 
 def load_run_metadata(run_dir):
     """Load metadata for a run"""
@@ -17,37 +17,75 @@ def load_run_metadata(run_dir):
             return json.load(f)
     return None
 
+def compute_stability_metrics(values):
+    """
+    Compute stability metrics across runs.
+    
+    Returns:
+        dict with mean, std, cv, min, max
+    """
+    values = np.array([v for v in values if v is not None and not np.isnan(v)])
+    if len(values) == 0:
+        return {'mean': np.nan, 'std': np.nan, 'cv': np.nan, 'min': np.nan, 'max': np.nan}
+    
+    return {
+        'mean': values.mean(),
+        'std': values.std(),
+        'cv': values.std() / values.mean() if values.mean() != 0 else np.nan,
+        'min': values.min(),
+        'max': values.max(),
+    }
+
 def compare_table2(run_dirs):
-    """Compare Table 2 results across runs"""
+    """Compare Table 2 results across runs with stability analysis"""
     comparison = []
+    all_precisions = []
     
     for run_dir in run_dirs:
         run_id = Path(run_dir).name
+        
+        # Load metadata
+        meta = load_run_metadata(run_dir)
+        seed_base = meta.get('params', {}).get('seed_base', 'unknown') if meta else 'unknown'
         
         # Try to find table2 files
         table2_files = list(Path(run_dir).glob('table2_*.csv'))
         
         if table2_files:
-            # Load the main one (OLS)
-            df = pd.read_csv(table2_files[0])
+            # Load the main one (estimated FN LASSO)
+            target_file = None
+            for f in table2_files:
+                if 'estimated_fn_lasso' in f.name:
+                    target_file = f
+                    break
+            
+            if not target_file:
+                target_file = table2_files[0]
+            
+            df = pd.read_csv(target_file)
             
             if 'precision_mean' in df.columns:
                 avg_precision = df['precision_mean'].mean()
-                avg_recall = df['recall_mean'].mean() if 'recall_mean' in df.columns else 'N/A'
-                avg_f1 = df['f1_mean'].mean() if 'f1_mean' in df.columns else 'N/A'
+                all_precisions.append(avg_precision)
+                avg_recall = df['recall_mean'].mean() if 'recall_mean' in df.columns else np.nan
+                avg_f1 = df['f1_mean'].mean() if 'f1_mean' in df.columns else np.nan
             else:
-                avg_precision = 'N/A'
-                avg_recall = 'N/A'
-                avg_f1 = 'N/A'
+                avg_precision = np.nan
+                avg_recall = np.nan
+                avg_f1 = np.nan
             
             comparison.append({
                 'Run ID': run_id,
-                'Avg Precision': f"{avg_precision:.4f}" if isinstance(avg_precision, float) else avg_precision,
-                'Avg Recall': f"{avg_recall:.4f}" if isinstance(avg_recall, float) else avg_recall,
-                'Avg F1': f"{avg_f1:.4f}" if isinstance(avg_f1, float) else avg_f1,
+                'Seed Base': seed_base,
+                'Precision': f"{avg_precision:.4f}" if not np.isnan(avg_precision) else 'N/A',
+                'Recall': f"{avg_recall:.4f}" if not np.isnan(avg_recall) else 'N/A',
+                'F1': f"{avg_f1:.4f}" if not np.isnan(avg_f1) else 'N/A',
             })
     
-    return pd.DataFrame(comparison)
+    # Compute stability
+    stability = compute_stability_metrics(all_precisions)
+    
+    return pd.DataFrame(comparison), stability
 
 def compare_metadata(run_dirs):
     """Compare metadata across runs"""
@@ -67,7 +105,7 @@ def compare_metadata(run_dirs):
     return pd.DataFrame(comparison)
 
 def main():
-    parser = argparse.ArgumentParser(description='Compare experiment runs')
+    parser = argparse.ArgumentParser(description='Compare experiment runs with stability analysis')
     parser.add_argument('run_ids', nargs='+', help='Run IDs to compare')
     parser.add_argument('--base-dir', default='results', help='Base results directory')
     parser.add_argument('--table', default='table2', choices=['table2', 'table4', 'table5', 'table6', 'meta'],
@@ -96,19 +134,36 @@ def main():
     # Compare based on table selection
     if args.table == 'meta':
         df = compare_metadata(run_dirs)
+        stability = None
     elif args.table == 'table2':
         # First show metadata
         print("--- Metadata ---")
         meta_df = compare_metadata(run_dirs)
-        print(tabulate(meta_df, headers='keys', tablefmt='grid', showindex=False))
+        print(meta_df.to_string(index=False))
         print("\n--- Table 2 Results ---")
-        df = compare_table2(run_dirs)
+        df, stability = compare_table2(run_dirs)
     else:
         print(f"Comparison for {args.table} not implemented yet.")
         return
     
     # Print comparison
-    print(tabulate(df, headers='keys', tablefmt='grid', showindex=False))
+    print(df.to_string(index=False))
+    
+    # Print stability metrics
+    if stability and not np.isnan(stability['cv']):
+        print("\n" + "="*80)
+        print("STABILITY ANALYSIS (Precision)")
+        print("="*80)
+        print(f"Mean:  {stability['mean']:.4f}")
+        print(f"Std:   {stability['std']:.6f}")
+        print(f"CV:    {stability['cv']*100:.2f}%")
+        print(f"Range: [{stability['min']:.4f}, {stability['max']:.4f}]")
+        print()
+        
+        if stability['cv'] < 0.05:
+            print("✓ STABLE: CV < 5% - results are reproducible")
+        else:
+            print("⚠ UNSTABLE: CV >= 5% - results vary significantly across seeds")
     print("\n" + "="*80)
     
     # Calculate differences (if numeric)

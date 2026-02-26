@@ -88,20 +88,35 @@ class ResultsManager:
     
     def save_run_metadata(self, params):
         """
-        Save overall run metadata.
+        Save overall run metadata with enhanced details.
         
         Parameters
         ----------
         params : dict
             Experiment parameters (seed_base, n_trials, etc.)
         """
+        import platform
+        import numpy as np
+        import pandas as pd
+        
         metadata = {
             'run_id': self.run_id,
             'timestamp': datetime.now().isoformat(),
             'git_commit': self._get_git_hash(),
             'git_branch': self._get_git_branch(),
             'params': params,
-            'python_version': self._get_python_version(),
+            'environment': {
+                'python_version': self._get_python_version(),
+                'platform': platform.platform(),
+                'machine': platform.machine(),
+                'numpy_version': np.__version__,
+                'pandas_version': pd.__version__,
+            },
+            'data_sources': {
+                'simulation': 'Generated on-the-fly via extended_dgp.py',
+                'empirical': 'data/empirical/te_features_weekly.csv (33 MB, 2005-2025)',
+                'note': 'All empirical data pre-downloaded, no external downloads'
+            }
         }
         
         meta_path = self.run_dir / 'run_metadata.json'
