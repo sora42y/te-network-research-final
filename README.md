@@ -10,22 +10,37 @@ This repository contains the complete replication package for our working paper 
 
 ---
 
-## 🚀 Quick Start (One-Click Replication)
+## 🚀 Quick Start
 
-### Run ALL experiments (recommended):
-```bash
-python run_experiments_modular.py --run-id paper_baseline
-```
-
-This generates all 4 tables and saves results to `results/paper_baseline/` with full metadata.
-
-### Quick test (10 trials):
+### One-Click: Run ALL experiments
 ```bash
 python run_experiments_modular.py --quick
 ```
+**Output**: All 4 tables in `results/<timestamp>/` (~5 min)
 
-**Expected runtime**:
-- Quick mode: ~5 minutes
+### Run Individual Tables
+```bash
+# Only Table 2 (main simulation)
+python run_experiments_modular.py --tables table2 --quick
+
+# Only Table 5 (empirical)
+python run_experiments_modular.py --tables table5
+
+# Multiple tables
+python run_experiments_modular.py --tables table2 table4 --quick
+```
+
+### Alternative: Direct Script Execution
+```bash
+# Table 2
+python src/run_factor_neutral_sim.py --trials 10
+
+# Table 5
+python src/empirical_portfolio_sort.py
+```
+
+**Runtime**:
+- Quick mode (`--quick`): ~5 minutes
 - Full mode (100 trials): ~30-60 minutes
 
 ---
@@ -102,70 +117,41 @@ S&P 500 portfolio sort analysis:
 
 ---
 
-## 🔬 Replication Instructions
-
-### Requirements
-```bash
-pip install -r requirements.txt
-```
-
-- Python 3.8+
-- NumPy, SciPy, scikit-learn, pandas
-- (Optional) LaTeX for paper compilation
-
----
+## 🔬 Run Experiments
 
 ### Method 1: Modular Workflow (Recommended)
 
-**Run specific tables independently**:
+**Run specific tables**:
 ```bash
-# Table 2 only (main simulation results)
-python run_experiments_modular.py --tables table2 --run-id test_table2
-
-# Table 5 only (empirical portfolio sort)
-python run_experiments_modular.py --tables table5 --run-id empirical_check
+# Single table
+python run_experiments_modular.py --tables table2 --run-id test1
 
 # Multiple tables
-python run_experiments_modular.py --tables table2 table4 --run-id baseline_v1
+python run_experiments_modular.py --tables table2 table4 --quick
 ```
 
-**Results saved to**: `results/<run_id>/`
+**Results**: Auto-saved to `results/<run_id>/` with metadata
 
 ---
 
-### Method 2: Manual Runs (Advanced)
+### Method 2: Direct Execution
 
-**Table 2 (Main Results)**:
+**Run scripts directly** (no versioning):
 ```bash
-cd src
-python run_factor_neutral_sim.py --trials 100
+# Table 2 (main simulation)
+python src/run_factor_neutral_sim.py --trials 100
+
+# Table 4 (oracle vs estimated)
+python src/all_experiments_v2.py --trials 100 --experiments 3
+
+# Table 5 (empirical portfolio sort)
+python src/empirical_portfolio_sort.py
+
+# Table 6 (power analysis)
+python src/oracle_nio_power.py --trials 50
 ```
 
-**Table 4 (Oracle vs Estimated)**:
-```bash
-python all_experiments_v2.py --trials 100 --experiments 3
-```
-
-**Table 5 (Portfolio Sort)**:
-```bash
-python empirical_portfolio_sort.py
-```
-
-**Table 6 (Power Analysis)**:
-```bash
-python oracle_nio_power.py --trials 50
-```
-
----
-
-### Compare Different Runs
-
-```bash
-# Compare two runs
-python compare_runs.py baseline_v1 baseline_v2 --table table2
-
-# Output: CV and stability metrics
-```
+**Results**: Saved to `results/*.csv` (may overwrite)
 
 ---
 
@@ -202,123 +188,68 @@ python compare_runs.py baseline_v1 baseline_v2 --table table2
 
 ---
 
-## 🔐 Reproducibility & Version Control
-
-### Fixed Seed Mode (Paper Submission)
+## 📋 Requirements
 ```bash
-python run_experiments_modular.py --run-id paper_final
+pip install -r requirements.txt
 ```
-- Uses `seed_base=42` (fixed)
-- Generates exact same results every time
-- Reviewers can verify with `compare_runs.py`
-
-### Robustness Check (Random Seeds)
-```bash
-python simulation_config.py --mode random --robustness-runs 10
-```
-- Tests 10 different seed sets
-- Reports CV across runs
-- **Expected CV < 5%** (stable)
-
-### Metadata Tracking
-Every run generates:
-- `run_metadata.json`: Git commit, timestamp, SHA256 hashes
-- `README.txt`: Human-readable summary
-- Auto-versioned directory: `results/<timestamp>_<git_hash>/`
-
-**Example**:
-```json
-{
-  "fingerprint": "74e4356a1b2c3d4e",
-  "git_commit": "74e4356",
-  "timestamp": "2026-02-26T00:30:00",
-  "params": {
-    "seed_base": 42,
-    "n_trials": 100
-  }
-}
-```
+Python 3.8+, NumPy, SciPy, scikit-learn, pandas
 
 ---
 
-## 📚 Documentation
+## 🔐 Reproducibility
 
-- `DATA_SOURCES.md`: Complete data lineage (CRSP → universe → TE features)
-- `REPRODUCIBILITY.md`: Dual-mode workflow & robustness validation
-- `CODE_CONSOLIDATION_PLAN.md`: Code audit & consolidation notes
+### Fixed Seed (Paper Version)
+```bash
+python run_experiments_modular.py --run-id paper_final
+```
+Generates exact same results every time.
+
+### Robustness Check
+```bash
+python compare_runs.py run1 run2 --table table2
+```
+Compare results across different runs. Expected CV < 5%.
+
+**Metadata tracking**: Every run generates `run_metadata.json` with git commit, timestamp, SHA256 hashes.
 
 ---
 
 ## 🏗️ Code Architecture
 
-### Core Module: `src/te_core.py`
-All TE calculations import from this **single source of truth**:
+**Core Module**: `src/te_core.py` (single source of truth)
 
 ```python
-from src.te_core import (
-    compute_linear_te_matrix,  # OLS or LASSO TE
-    compute_nio,               # Net Information Outflow
-    compute_precision_recall_f1 # Evaluation metrics
-)
+from te_core import compute_linear_te_matrix, compute_nio
+
+# OLS-TE
+te_matrix, adj = compute_linear_te_matrix(R, method='ols', t_threshold=2.0)
+
+# LASSO-TE
+te_matrix, adj = compute_linear_te_matrix(R, method='lasso')
+
+# Net Information Outflow
+nio = compute_nio(te_matrix, method='binary')
 ```
 
-**Benefits**:
-- No duplicate implementations
-- Reviewers can verify algorithm in ONE place
-- 200+ lines of documentation
+**All experiments import from `te_core.py`** (no duplicate implementations).
 
 ---
 
-## 📖 Citation
+## 📚 Documentation
 
-```bibtex
-@unpublished{te-network-audit-2026,
-  author = {[Your Name]},
-  title  = {Do Financial Transfer Entropy Networks Recover Meaningful Structure? 
-            A Matched-DGP Audit of Node-Level Estimation Reliability},
-  year   = {2026},
-  note   = {Working paper}
-}
-```
+- `DATA_SOURCES.md`: Complete data lineage (CRSP → TE features)
+- `REPRODUCIBILITY.md`: Dual-mode workflow & robustness validation
+- `CODE_CONSOLIDATION_PLAN.md`: Code audit notes
 
 ---
 
-## 🛠️ Development
+## 🧪 Code Verification
 
-### Run Tests
 ```bash
-pytest tests/
+# Check implementation consistency
+python audit_code_consistency.py
+
+# Expected output:
+# TE difference: 0.00e+00
+# All imports: OK
 ```
-
-### Code Audit
-See `CODE_CONSOLIDATION_PLAN.md` for consolidation roadmap.
-
----
-
-## 📧 Contact
-
-[Your contact information]
-
----
-
-## ✅ Reproducibility Checklist
-
-- [x] All experiments use unified `te_core.py` module
-- [x] Fixed seed mode for exact replication
-- [x] Random seed mode for robustness validation
-- [x] Versioned results with metadata tracking
-- [x] Horizontal comparison tools
-- [x] Complete data lineage documentation
-- [x] One-click replication script
-- [x] Modular workflow (tables run independently)
-
-**This replication package follows computational research best practices** as outlined in:
-- *Nature* Reporting Guidelines
-- Goodfellow et al. (2016) *Deep Learning*
-- Christensen & Miguel (2018) "Transparency, Reproducibility, and the Credibility of Economics Research"
-
----
-
-**License**: MIT
-
-**Branch**: `code-audit-consolidation` (recommended) | `paper-final` (legacy)
