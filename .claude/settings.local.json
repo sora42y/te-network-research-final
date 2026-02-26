@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(tail:*)",
+      "Bash(find:*)",
+      "Bash(head:*)",
+      "Bash(cd /c/Users/soray/.openclaw/workspace/te-network-audit && python -c \"from sklearn.linear_model import LassoLarsIC; l = LassoLarsIC\\(criterion='bic', max_iter=1000, normalize=False\\)\" 2>&1)",
+      "Bash(cd /c/Users/soray/.openclaw/workspace/te-network-audit && python -c \"import sklearn; print\\('scikit-learn:', sklearn.__version__\\); import numpy; print\\('numpy:', numpy.__version__\\); import pandas; print\\('pandas:', pandas.__version__\\); import scipy; print\\('scipy:', scipy.__version__\\)\" 2>&1)",
+      "Bash(cd /c/Users/soray/.openclaw/workspace/te-network-audit && python -c \"\nimport numpy as np\nimport sys\nsys.path.insert\\(0, 'src'\\)\nfrom algorithms import compute_linear_te_matrix\n\n# Generate data with known structure \\(x -> y\\)\nnp.random.seed\\(42\\)\nT = 500\nx = np.random.randn\\(T\\)\ny = np.zeros\\(T\\)\nfor t in range\\(1, T\\):\n    y[t] = 0.5 * y[t-1] + 0.3 * x[t-1] + np.random.randn\\(\\)\nR = np.column_stack\\([x, y]\\)\n\n# Test LASSO\nTE_lasso, A_lasso = compute_linear_te_matrix\\(R, method='lasso'\\)\nprint\\('LASSO edges detected:', A_lasso.sum\\(\\)\\)\nprint\\('LASSO TE matrix sum:', TE_lasso.sum\\(\\)\\)\n\n# Test OLS for comparison\nTE_ols, A_ols = compute_linear_te_matrix\\(R, method='ols'\\)\nprint\\('OLS edges detected:', A_ols.sum\\(\\)\\)\nprint\\('OLS TE matrix sum:', TE_ols.sum\\(\\)\\)\n\" 2>&1)",
+      "Bash(cd \"/c/Users/soray/.openclaw/workspace/te-network-audit\" && python -c \"\nimport numpy as np\nimport sys\nsys.path.insert\\(0, 'src'\\)\nfrom algorithms import compute_nio\n\n# Create a TE matrix where node 0 is a clear hub \\(causes nodes 1,2,3\\)\n# Convention: A[i,j]=1 means j->i\n# So hub node 0 causing 1,2,3 means: A[1,0]=1, A[2,0]=1, A[3,0]=1\nN = 4\nA = np.zeros\\(\\(N, N\\)\\)\nA[1, 0] = 1  # 0 -> 1\nA[2, 0] = 1  # 0 -> 2\nA[3, 0] = 1  # 0 -> 3\n\nprint\\('Adjacency matrix \\(A[i,j]=1 means j->i\\):'\\)\nprint\\(A\\)\nprint\\(\\)\nprint\\('Out-degree \\(should be: node0=3, rest=0\\):'\\)\nprint\\('  A.sum\\(axis=0\\) =', A.sum\\(axis=0\\), ' \\(column sums = true out-degree\\)'\\)\nprint\\('  A.sum\\(axis=1\\) =', A.sum\\(axis=1\\), ' \\(row sums = true in-degree\\)'\\)\nprint\\(\\)\n\nnio = compute_nio\\(A, method='binary'\\)\nprint\\('NIO from compute_nio\\(\\):', nio\\)\nprint\\(\\)\nprint\\('Expected: node 0 should have HIGHEST NIO \\(it transmits info\\)'\\)\nprint\\('Actual: node 0 has NIO =', nio[0]\\)\nprint\\('Is node 0 max?', np.argmax\\(nio\\) == 0\\)\n\" 2>&1)"
+    ]
+  }
+}
